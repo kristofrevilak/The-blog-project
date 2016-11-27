@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  .main_header
+    h2.main_nadpis
+      |New Blog
+  .main_body
+    form(method="post", action="/blogs")
+      .form_item
+        label Title
+        input(type="text", name="blog[title]", placeholder="title of your new blog").input
+      .form_item
+        label Blog Content
+        textarea(name="blog[body]", placeholder="content of your new blog").input
+      .form_item
+        input(type="submit", value="create new blog").input

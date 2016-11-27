@@ -1,0 +1,22 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    link(href='https://fonts.googleapis.com/css?family=Merriweather|Raleway', rel='stylesheet')
+    link(href='https://fonts.googleapis.com/css?family=Titillium+Web', rel='stylesheet')
+  header
+    ul
+      li
+        a(href='/').title NodeBlog
+      li
+        a(href="/blogs/new/").other Add Post
+      li
+        a(href="categories/add").other Signup
+  body
+    .container
+      block content
+      hr
+      footer
+        p.date
+          |NodeBlog &copy; 2016

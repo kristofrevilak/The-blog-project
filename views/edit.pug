@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  .main_header
+    h2.main_nadpis
+      |Edit #{blog.title}
+  .main_body
+    form(method="post", action="/blogs/" + blog._id + "?_method=PUT")
+      .form_item
+        label Title
+        input(type="text", name="blog[title]", value=blog.title).input
+      .form_item
+        label Blog Content
+        textarea(name="blog[body]").input #{blog.body}
+      .form_item
+        input(type="submit", value="save changes").input

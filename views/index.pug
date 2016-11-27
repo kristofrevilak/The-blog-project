@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  each blog in blogs
+    .article_preview
+      h2
+        a(href='/blogs/' + blog._id + "").nadpis.read #{blog.title}
+      p.date
+        |#{blog.date.toDateString()}
+      p
+        |#{blog.body.substring(0, 350) + "..."}
+      a(href='/blogs/' + blog._id + "").read
+        |citaj dalej kokot
