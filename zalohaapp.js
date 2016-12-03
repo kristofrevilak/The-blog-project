@@ -3,15 +3,13 @@
 // #   REQUIRING STUFF   #
 // #                     #
 // #######################
-// TODO: pridat | medzi datum a autora v SHOW
-// TODO: dat EDIT a DELETE tlacitka v SHOW vedla seba
+
 var express          = require("express"),
     methodOverride   = require('method-override'),
     expressSanitizer = require("express-sanitizer"),
     mongoose         = require("mongoose"),
     bodyParser       = require("body-parser"),
     flash            = require('connect-flash'),
-    cookieParser     = require('cookie-parser'),
     path             = require('path'),
     favicon          = require('serve-favicon'),
     passport         = require('passport'),
@@ -27,27 +25,11 @@ var express          = require("express"),
 // #####################
 
 // connect to mongoDb
-mongoose.Promise = global.Promise;
 var url = process.env.DATABASEURL || "mongodb://localhost/restful_blog_app";
 mongoose.connect(url);
 
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(bodyParser.json());
 app.use(expressSanitizer());
-
-app.use(require("express-session")({
-    secret: "Ja som Bratislava, chlapci ruky hore!",
-    resave: false,
-    saveUninitialized: false,
-    // cookie: { maxAge: 60000 }
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-app.use(cookieParser('keyboard cat'));
-app.use(flash());
-
 // override method in html form with ?_method =..
 app.use(methodOverride('_method'));
 
@@ -61,11 +43,15 @@ app.set("view engine", "pug");
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname,'public','favicon.ico')));
 
-app.use(function(req, res, next){
-  res.locals.error = req.flash("error");
-  res.locals.success = req.flash("success");
-  next();
-});
+// app.use(function(req, res, next){
+//   var pouzData = req.user;
+//   var pouzivatel = JSON.parse(JSON.stringify(obj));
+//   if(pouzivatel !== undefined){
+//     console.log(pouzivatel.username);
+//     res.locals.currentUser = pouzivatel.username;
+//   };
+//   next();
+// });
 
 // ####################
 // #                  #
@@ -73,17 +59,12 @@ app.use(function(req, res, next){
 // #                  #
 // ####################
 
+
+
 // mongoose model config
 var blogSchema = new mongoose.Schema({
   title: String,
   body: String,
-  author: {
-    id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
-    },
-    username: String
-  },
   date: {type: Date, default: Date.now}
 });
 // saving the mongoose model into var
@@ -101,6 +82,15 @@ var Blog = mongoose.model("Blog", blogSchema);
 // #   THE AUTHENTICATION CONFIG   #
 // #                               #
 // #################################
+
+app.use(require("express-session")({
+    secret: "Ja som Bratislava, chlapci ruky hore!",
+    resave: false,
+    saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
@@ -141,10 +131,9 @@ app.get("/blogs", function(req, res){
 // **********
 
 // the edit route and passing the blog to be edited
-app.get("/blogs/:id/edit", isLoggedIn,isBlogAuthor,function(req, res){
+app.get("/blogs/:id/edit", isLoggedIn ,function(req, res){
   Blog.findById(req.params.id, function(err, foundBlog){
     if(err){
-      req.flash("error", "This blog doesnt exist!");
       res.redirect("back");
     } else {
       if(req.user !== undefined){
@@ -155,17 +144,15 @@ app.get("/blogs/:id/edit", isLoggedIn,isBlogAuthor,function(req, res){
   });
 });
 
-app.put("/blogs/:id", isLoggedIn, isBlogAuthor ,function(req, res){
+app.put("/blogs/:id", isLoggedIn ,function(req, res){
   var result = JSON.parse(JSON.stringify(req.body));
 
   result.blog.body = req.sanitize(result.blog.body);
 
   Blog.findByIdAndUpdate(req.params.id, result.blog, function(err, updatedBlog) {
     if(err){
-      req.flash("error", "Unable to edit blog: No such blog with this id!");
       res.redirect("back");
     } else {
-      req.flash("success", "Successfuly updated Blog!");
       res.redirect("/blogs/" + req.params.id);
     }
   });
@@ -183,19 +170,11 @@ app.get("/blogs/new", isLoggedIn ,function(req, res){
 });
 
 app.post("/blogs", isLoggedIn ,function(req,res){
-  var body = req.sanitize(req.body.blog.body);
-  var title = req.sanitize(req.body.blog.title);
-  var author = {
-    id: req.user._id,
-    username: req.user.username
-  };
-  var neuBlog = {title: title, body: body, author: author};
-  Blog.create(neuBlog, function(err, newBlog){
+  req.body.blog.body = req.sanitize(req.body.blog.body);
+  Blog.create(req.body.blog, function(err, newBlog){
     if(err){
-      req.flash("error", "Something went wrong while creating the blog. Please try again.");
-      res.redirect("/blogs/new");
+      res.render("new");
     } else {
-      req.flash("success", "Successfuly created a new Blog!");
       res.redirect("/blogs");
     }
   });
@@ -205,13 +184,11 @@ app.post("/blogs", isLoggedIn ,function(req,res){
 // DELETE BLOGS
 // ************
 
-app.delete("/blogs/:id", isLoggedIn, isBlogAuthor ,function(req, res){
+app.delete("/blogs/:id", isLoggedIn ,function(req, res){
   Blog.findByIdAndRemove(req.params.id, function(err){
     if(err){
-      req.flash("error", "Something went wrong while deleting the blog. Please try again.");
       res.redirect("back");
     } else {
-      req.flash("success", "Successfuly deleted Blog!");
       res.redirect("/blogs");
     }
   });
@@ -234,11 +211,9 @@ app.post("/register", function(req, res){
 
   User.register(newUser, req.body.password, function(err, user){
     if(err){
-      req.flash("error", err.message);
       res.redirect("register");
     }
     passport.authenticate("local")(req, res, function(){
-      req.flash("success", "Welcome to NodeBlog" + req.user.username);
       res.redirect("/blogs");
     });
   });
@@ -259,7 +234,7 @@ app.get("/login", function(req, res){
 app.post("/login", passport.authenticate("local",
 {
     successRedirect: "/blogs",
-    failureRedirect: "/login",
+    failureRedirect: "/login"
 
   }), function(req, res){
 });
@@ -270,7 +245,6 @@ app.post("/login", passport.authenticate("local",
 
 app.get("/logout", function(req, res){
   req.logout();
-  req.flash("success","Successfuly logged out!");
   res.redirect("/blogs");
 })
 
@@ -278,14 +252,13 @@ app.get("/logout", function(req, res){
 app.get("/blogs/:id", function(req, res){
   Blog.findById(req.params.id, function(err, foundBlog){
     if(err){
-      req.flash("error", "Cannot view Blog: There is no Blog with such id!");
       res.redirect("back");
       console.log(err);
     } else {
       if(req.user !== undefined){
          res.locals.currentUser = req.user.username;
        };
-      res.render("show", {blog: foundBlog, colon: "|"});
+      res.render("show", {blog: foundBlog});
     }
   });
 });
@@ -300,26 +273,7 @@ function isLoggedIn(req, res, next){
   if(req.isAuthenticated()){
     return next();
   }
-  req.flash("error", "You need to be logged in to do that!");
   res.redirect("/login");
-}
-
-function isBlogAuthor(req, res, next){
-  Blog.findById(req.params.id, function(err, foundBlog){
-    if(err){
-      req.flash("error", "There is no blog with such id!");
-      res.redirect("back");
-    }
-    else{
-      if(foundBlog.author.id.equals(req.user._id)){
-        next();
-      }
-      else{
-        req.flash("error", "You dont have permission to do that!");
-        res.redirect("back");
-      }
-    }
-  });
 }
 
 // ################################

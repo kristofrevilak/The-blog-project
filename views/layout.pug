@@ -9,12 +9,22 @@ html
     ul
       li
         a(href='/').title NodeBlog
-      li
-        a(href="/blogs/new/").other Add Post
-      li
-        a(href="categories/add").other Signup
+      if(!currentUser)
+        li
+          a(href="/login").other Login
+        li
+          a(href="/register").other Signup
+      if(currentUser)
+        li
+          a(href="/blogs/new").other Add Post
+        li
+          a(href="/logout").other Logout
   body
     .container
+      if(error && error.length > 0)
+        p.input.red=error
+      if(success && success.length > 0)
+        p.input.green=success
       block content
       hr
       footer

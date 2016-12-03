@@ -6,13 +6,17 @@ block content
       |#{blog.title}
     p.date
       |#{blog.date.toDateString()}
+    p.date=colon
     p.date
-      a(href="/blogs/" + blog._id + "/edit").read.right.yellow
-        |edit
-    p.date
-      form(action="/blogs/" + blog.id + "?_method=DELETE", method="POST")
-        button.read.right.red
-          |delete
+      | by #{blog.author.username}
+    if(currentUser && currentUser === blog.author.username)
+      p.date
+        a(href="/blogs/" + blog._id + "/edit").read.right.yellow
+          |edit
+      p.date
+        form(action="/blogs/" + blog.id + "?_method=DELETE", method="POST")
+          button.read.right.red
+            |delete
   .main_body
     p
       |#{blog.body}

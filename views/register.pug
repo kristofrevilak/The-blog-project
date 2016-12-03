@@ -1,0 +1,16 @@
+extends layout
+
+block content
+  .main_header
+    h2.main_nadpis
+      |Register
+  .main_body
+    form(method="post", action="/register")
+      .form_item
+        label Username
+        input(type="text", name="username", placeholder="Enter Username").input
+      .form_item
+        label Password
+        input(type="password", name="password", placeholder="Enter Password").input
+      .form_item
+        input(type="submit", value="Create new user!").input

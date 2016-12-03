@@ -7,6 +7,8 @@ block content
         a(href='/blogs/' + blog._id + "").nadpis.read #{blog.title}
       p.date
         |#{blog.date.toDateString()}
+      p.date
+        | by #{blog.author.username}
       p
         |#{blog.body.substring(0, 350) + "..."}
       a(href='/blogs/' + blog._id + "").read
